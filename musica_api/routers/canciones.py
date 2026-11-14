@@ -1,0 +1,78 @@
+"""Endpoints de canciones: /api/canciones"""
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlmodel import Session, col, select
+
+from musica_api.database import get_session
+from musica_api.models import Cancion, CancionCreate, CancionRead, CancionUpdate
+
+router = APIRouter()
+
+
+def _obtener_o_404(session: Session, id: int) -> Cancion:
+    cancion = session.get(Cancion, id)
+    if not cancion:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Canción no encontrada")
+    return cancion
+
+
+@router.get("", response_model=list[CancionRead])
+def listar_canciones(
+    session: Session = Depends(get_session),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+):
+    return session.exec(select(Cancion).offset(offset).limit(limit)).all()
+
+
+@router.post("", response_model=CancionRead, status_code=status.HTTP_201_CREATED)
+def crear_cancion(datos: CancionCreate, session: Session = Depends(get_session)):
+    cancion = Cancion.model_validate(datos)
+    session.add(cancion)
+    session.commit()
+    session.refresh(cancion)
+    return cancion
+
+
+# IMPORTANTE: /buscar debe declararse antes de /{id}, si no FastAPI
+# intentaría interpretar "buscar" como un id.
+@router.get("/buscar", response_model=list[CancionRead])
+def buscar_canciones(
+    titulo: str | None = None,
+    artista: str | None = None,
+    genero: str | None = None,
+    session: Session = Depends(get_session),
+):
+    """Búsqueda parcial e insensible a mayúsculas; los filtros se combinan con AND."""
+    query = select(Cancion)
+    if titulo:
+        query = query.where(col(Cancion.titulo).ilike(f"%{titulo}%"))
+    if artista:
+        query = query.where(col(Cancion.artista).ilike(f"%{artista}%"))
+    if genero:
+        query = query.where(col(Cancion.genero).ilike(f"%{genero}%"))
+    return session.exec(query).all()
+
+
+@router.get("/{id}", response_model=CancionRead)
+def obtener_cancion(id: int, session: Session = Depends(get_session)):
+    return _obtener_o_404(session, id)
+
+
+@router.put("/{id}", response_model=CancionRead)
+def actualizar_cancion(
+    id: int, datos: CancionUpdate, session: Session = Depends(get_session)
+):
+    cancion = _obtener_o_404(session, id)
+    cancion.sqlmodel_update(datos.model_dump(exclude_unset=True))
+    session.add(cancion)
+    session.commit()
+    session.refresh(cancion)
+    return cancion
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_cancion(id: int, session: Session = Depends(get_session)):
+    cancion = _obtener_o_404(session, id)
+    session.delete(cancion)  # sus favoritos se eliminan en cascada
+    session.commit()
