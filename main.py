@@ -1,3 +1,4 @@
+import logging
 import platform
 import time
 from contextlib import asynccontextmanager
@@ -9,9 +10,14 @@ from sqlmodel import Session
 
 from musica_api.config import get_settings
 from musica_api.database import create_db_and_tables, get_session
+from musica_api.errores import registrar_manejadores
+from musica_api.logging_config import configurar_logging
+from musica_api.middleware import HEADER_REQUEST_ID, registrar_requests
 from musica_api.routers import canciones, favoritos, usuarios
 
 settings = get_settings()
+configurar_logging(settings.log_level, settings.log_file)
+logger = logging.getLogger("musica_api")
 INICIO = time.time()
 
 
@@ -23,10 +29,16 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Crear tablas en la base de datos
     create_db_and_tables()
+    logger.info(
+        "%s v%s iniciada (entorno=%s)",
+        settings.app_name,
+        settings.app_version,
+        settings.environment,
+    )
     yield
 
     # Shutdown: Limpiar recursos si es necesario
-    print("cerrando aplicación...")
+    logger.info("Cerrando aplicación...")
 
 
 app = FastAPI(
@@ -53,7 +65,15 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Permite que el frontend lea el id de request para reportar errores
+    expose_headers=[HEADER_REQUEST_ID],
 )
+
+# Registrar cada request (método, ruta, estado, duración e id de seguimiento)
+app.middleware("http")(registrar_requests)
+
+# Manejadores de errores: registran en el log y mantienen el formato {"detail": ...}
+registrar_manejadores(app)
 
 
 app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuarios"])
@@ -90,6 +110,7 @@ def health_check(session: Session = Depends(get_session)):
         session.exec(text("SELECT 1"))
         estado_db = "ok"
     except Exception as e:  # noqa: BLE001
+        logger.error("Health check: fallo de conexión a la base de datos: %s", e)
         estado_db = f"error: {e}"
 
     return {
@@ -99,12 +120,6 @@ def health_check(session: Session = Depends(get_session)):
         "python": platform.python_version(),
         "sistema": platform.system(),
     }
-
-
-# TODO: Opcional - Agregar middleware para logging de requests
-
-
-# TODO: Opcional - Agregar manejadores de errores personalizados
 
 
 if __name__ == "__main__":
