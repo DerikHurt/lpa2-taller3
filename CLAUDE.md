@@ -24,8 +24,12 @@ pytest                              # all tests
 pytest tests/test_api.py::TestUsuarios::test_crear_usuario   # single test
 pytest -k favorito                  # by keyword
 
-ruff check . && ruff format .       # once ruff is added (not yet in requirements.txt)
+ruff check --fix . && ruff format .  # config in pyproject.toml (B008 ignored for FastAPI Depends)
+pre-commit install                  # once; hooks: whitespace/EOF, ruff check+format, pytest
+pre-commit run --all-files
 ```
+
+The pre-commit `pytest` hook is `language: system`, so it runs whatever `python` is on PATH — activate the venv before committing. CI (`.github/workflows/ci.yml`) runs two jobs on push to `main` and on PRs: `ruff check` + `ruff format --check`, and `pytest` on Python 3.12.
 
 ## Architecture
 
