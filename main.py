@@ -2,13 +2,13 @@ import platform
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlmodel import Session
 
 from musica_api.config import get_settings
-from musica_api.database import create_db_and_tables, engine
+from musica_api.database import create_db_and_tables, get_session
 from musica_api.routers import canciones, favoritos, usuarios
 
 settings = get_settings()
@@ -81,14 +81,13 @@ async def root():
 
 
 @app.get("/health", tags=["Health"])
-def health_check():
+def health_check(session: Session = Depends(get_session)):
     """
     Health check endpoint para verificar el estado de la API.
     Útil para sistemas de monitoreo y orquestación.
     """
     try:
-        with Session(engine) as session:
-            session.exec(text("SELECT 1"))
+        session.exec(text("SELECT 1"))
         estado_db = "ok"
     except Exception as e:  # noqa: BLE001
         estado_db = f"error: {e}"
