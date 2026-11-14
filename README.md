@@ -22,7 +22,7 @@ El proyecto incluye una interfaz de documentación interactiva generada automát
 lpa2-taller3
 ├──  README.md            # Este archivo, documentación completa del proyecto
 ├──  .env                 # Variables de entorno (desarrollo, pruebas, producción)
-├──  .env.example                # Plantilla de variables de entorno (copiar como .env)
+├──  .env.example         # Plantilla de variables de entorno (copiar como .env)
 ├──  .gitignore           # Archivos y directorios a ignorar por Git
 ├──  main.py              # Script principal para ejecutar la aplicación
 ├──  musica.db            # Base de Datos
