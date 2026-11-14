@@ -2,11 +2,17 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, col, select
 
 from musica_api.database import get_session
 from musica_api.models import Cancion, CancionCreate, CancionRead, CancionUpdate
+from musica_api.paginacion import (
+    Pagina,
+    ParametrosPaginacion,
+    paginar,
+    parametros_paginacion,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -19,13 +25,12 @@ def _obtener_o_404(session: Session, id: int) -> Cancion:
     return cancion
 
 
-@router.get("", response_model=list[CancionRead])
+@router.get("", response_model=Pagina[CancionRead])
 def listar_canciones(
     session: Session = Depends(get_session),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+    pag: ParametrosPaginacion = Depends(parametros_paginacion),
 ):
-    return session.exec(select(Cancion).offset(offset).limit(limit)).all()
+    return paginar(session, select(Cancion).order_by(Cancion.id), pag)
 
 
 @router.post("", response_model=CancionRead, status_code=status.HTTP_201_CREATED)
@@ -40,12 +45,13 @@ def crear_cancion(datos: CancionCreate, session: Session = Depends(get_session))
 
 # IMPORTANTE: /buscar debe declararse antes de /{id}, si no FastAPI
 # intentaría interpretar "buscar" como un id.
-@router.get("/buscar", response_model=list[CancionRead])
+@router.get("/buscar", response_model=Pagina[CancionRead])
 def buscar_canciones(
     titulo: str | None = None,
     artista: str | None = None,
     genero: str | None = None,
     session: Session = Depends(get_session),
+    pag: ParametrosPaginacion = Depends(parametros_paginacion),
 ):
     """Búsqueda parcial e insensible a mayúsculas; los filtros se combinan con AND."""
     query = select(Cancion)
@@ -55,7 +61,7 @@ def buscar_canciones(
         query = query.where(col(Cancion.artista).ilike(f"%{artista}%"))
     if genero:
         query = query.where(col(Cancion.genero).ilike(f"%{genero}%"))
-    return session.exec(query).all()
+    return paginar(session, query.order_by(Cancion.id), pag)
 
 
 @router.get("/{id}", response_model=CancionRead)

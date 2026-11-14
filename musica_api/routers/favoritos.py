@@ -2,11 +2,17 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
 from musica_api.database import get_session
 from musica_api.models import Cancion, Favorito, FavoritoCreate, FavoritoRead, Usuario
+from musica_api.paginacion import (
+    Pagina,
+    ParametrosPaginacion,
+    paginar,
+    parametros_paginacion,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -42,13 +48,12 @@ def marcar_favorito(session: Session, id_usuario: int, id_cancion: int) -> Favor
     return favorito
 
 
-@router.get("", response_model=list[FavoritoRead])
+@router.get("", response_model=Pagina[FavoritoRead])
 def listar_favoritos(
     session: Session = Depends(get_session),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+    pag: ParametrosPaginacion = Depends(parametros_paginacion),
 ):
-    return session.exec(select(Favorito).offset(offset).limit(limit)).all()
+    return paginar(session, select(Favorito).order_by(Favorito.id), pag)
 
 
 @router.post("", response_model=FavoritoRead, status_code=status.HTTP_201_CREATED)

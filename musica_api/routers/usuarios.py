@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
 from musica_api.database import get_session
@@ -14,6 +14,12 @@ from musica_api.models import (
     UsuarioCreate,
     UsuarioRead,
     UsuarioUpdate,
+)
+from musica_api.paginacion import (
+    Pagina,
+    ParametrosPaginacion,
+    paginar,
+    parametros_paginacion,
 )
 from musica_api.routers.favoritos import marcar_favorito
 
@@ -38,13 +44,12 @@ def _verificar_correo_libre(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "El correo ya está registrado")
 
 
-@router.get("", response_model=list[UsuarioRead])
+@router.get("", response_model=Pagina[UsuarioRead])
 def listar_usuarios(
     session: Session = Depends(get_session),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+    pag: ParametrosPaginacion = Depends(parametros_paginacion),
 ):
-    return session.exec(select(Usuario).offset(offset).limit(limit)).all()
+    return paginar(session, select(Usuario).order_by(Usuario.id), pag)
 
 
 @router.post("", response_model=UsuarioRead, status_code=status.HTTP_201_CREATED)
@@ -92,10 +97,20 @@ def eliminar_usuario(id: int, session: Session = Depends(get_session)):
 # -----------------------------------------------------------------------------
 
 
-@router.get("/{id}/favoritos", response_model=list[FavoritoReadConCancion])
-def listar_favoritos_usuario(id: int, session: Session = Depends(get_session)):
+@router.get("/{id}/favoritos", response_model=Pagina[FavoritoReadConCancion])
+def listar_favoritos_usuario(
+    id: int,
+    session: Session = Depends(get_session),
+    pag: ParametrosPaginacion = Depends(parametros_paginacion),
+):
     _obtener_o_404(session, id)
-    return session.exec(select(Favorito).where(Favorito.id_usuario == id)).all()
+    # Los más recientes primero
+    query = (
+        select(Favorito)
+        .where(Favorito.id_usuario == id)
+        .order_by(Favorito.fecha_marcado.desc(), Favorito.id.desc())
+    )
+    return paginar(session, query, pag)
 
 
 @router.post(

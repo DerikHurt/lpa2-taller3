@@ -74,7 +74,7 @@ class TestUsuarios:
         response = client.get("/api/usuarios")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 1
         assert data[0]["correo"] == usuario_test.correo
 
@@ -82,7 +82,7 @@ class TestUsuarios:
         response = client.get("/api/usuarios")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_listar_usuarios_paginacion(self, client: TestClient, session: Session):
         for i in range(5):
@@ -92,7 +92,7 @@ class TestUsuarios:
         response = client.get("/api/usuarios", params={"offset": 1, "limit": 2})
 
         assert response.status_code == 200
-        assert [u["nombre"] for u in response.json()] == ["U1", "U2"]
+        assert [u["nombre"] for u in response.json()["items"]] == ["U1", "U2"]
 
     def test_crear_usuario(self, client: TestClient):
         """Test para POST /api/usuarios"""
@@ -199,7 +199,7 @@ class TestCanciones:
         response = client.get("/api/canciones")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 1
         assert data[0]["titulo"] == cancion_test.titulo
 
@@ -269,7 +269,7 @@ class TestCanciones:
         response = client.get("/api/canciones/buscar", params={"titulo": "canción t"})
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 1
         assert data[0]["id"] == cancion_test.id
 
@@ -279,7 +279,7 @@ class TestCanciones:
         response = client.get("/api/canciones/buscar", params={"artista": "Nadie"})
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_buscar_canciones_multiples_filtros(self, client: TestClient):
         """Test para búsqueda con múltiples parámetros"""
@@ -299,7 +299,7 @@ class TestCanciones:
         )
 
         assert response.status_code == 200
-        titulos = [c["titulo"] for c in response.json()]
+        titulos = [c["titulo"] for c in response.json()["items"]]
         assert titulos == ["Bohemian Rhapsody"]
 
 
@@ -316,7 +316,7 @@ class TestFavoritos:
         response = client.get("/api/favoritos")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_crear_favorito(
         self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
@@ -421,7 +421,7 @@ class TestFavoritos:
         response = client.get(f"/api/usuarios/{usuario_test.id}/favoritos")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 1
         # Incluye los datos de la canción
         assert data[0]["cancion"]["titulo"] == cancion_test.titulo
@@ -458,7 +458,7 @@ class TestFavoritos:
 
         client.delete(f"/api/usuarios/{usuario_test.id}")
 
-        assert client.get("/api/favoritos").json() == []
+        assert client.get("/api/favoritos").json()["items"] == []
 
     def test_eliminar_cancion_elimina_sus_favoritos(
         self,
@@ -472,7 +472,7 @@ class TestFavoritos:
 
         client.delete(f"/api/canciones/{cancion_test.id}")
 
-        assert client.get("/api/favoritos").json() == []
+        assert client.get("/api/favoritos").json()["items"] == []
 
 
 # =============================================================================
@@ -504,14 +504,16 @@ class TestIntegracion:
         # 4. Verificar que aparece en favoritos del usuario
         r = client.get(f"/api/usuarios/{id_usuario}/favoritos")
         assert r.status_code == 200
-        favoritos = r.json()
+        favoritos = r.json()["items"]
         assert len(favoritos) == 1
         assert favoritos[0]["cancion"]["id"] == id_cancion
 
         # 5. Quitarlo de favoritos
         r = client.delete(f"/api/usuarios/{id_usuario}/favoritos/{id_cancion}")
         assert r.status_code == 204
-        assert client.get(f"/api/usuarios/{id_usuario}/favoritos").json() == []
+        favs = client.get(f"/api/usuarios/{id_usuario}/favoritos").json()
+        assert favs["items"] == []
+        assert favs["total"] == 0
 
     def test_root_y_health(self, client: TestClient):
         root = client.get("/")
