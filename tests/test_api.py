@@ -10,9 +10,8 @@ from sqlmodel.pool import StaticPool
 
 from main import app
 from musica_api.database import get_session
-from musica_api.models import Usuario, Cancion, Favorito
+from musica_api.models import Cancion, Favorito, Usuario
 from utils import obtener_año_actual
-
 
 # =============================================================================
 # CONFIGURACIÓN DE FIXTURES
@@ -605,7 +604,9 @@ class TestValidacion:
 
         assert response.status_code == 422
 
-    @pytest.mark.parametrize("campo", ["titulo", "artista", "duracion", "año", "genero"])
+    @pytest.mark.parametrize(
+        "campo", ["titulo", "artista", "duracion", "año", "genero"]
+    )
     def test_campos_requeridos(self, client: TestClient, campo: str):
         """Test para verificar que los campos requeridos son obligatorios"""
         datos = datos_cancion()

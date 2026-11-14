@@ -62,8 +62,13 @@ def test_obtener_año_actual():
 
 @pytest.mark.parametrize(
     "año, esperado",
-    [(1899, False), (1900, True), (1975, True), (obtener_año_actual(), True),
-     (obtener_año_actual() + 1, False)],
+    [
+        (1899, False),
+        (1900, True),
+        (1975, True),
+        (obtener_año_actual(), True),
+        (obtener_año_actual() + 1, False),
+    ],
 )
 def test_validar_año(año, esperado):
     assert validar_año(año) is esperado

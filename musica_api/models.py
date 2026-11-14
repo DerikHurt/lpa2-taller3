@@ -11,7 +11,7 @@ Nota: SQLModel NO ejecuta validadores en los modelos table=True, por eso
 la validación vive en los esquemas Create/Update.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import field_validator
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
@@ -20,7 +20,7 @@ from utils import obtener_año_actual, validar_año, validar_correo
 
 
 def ahora_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # =============================================================================

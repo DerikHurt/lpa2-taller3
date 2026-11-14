@@ -25,7 +25,9 @@ def _obtener_o_404(session: Session, id: int) -> Usuario:
     return usuario
 
 
-def _verificar_correo_libre(session: Session, correo: str, excluir_id: int | None = None):
+def _verificar_correo_libre(
+    session: Session, correo: str, excluir_id: int | None = None
+):
     query = select(Usuario).where(Usuario.correo == correo)
     if excluir_id is not None:
         query = query.where(Usuario.id != excluir_id)

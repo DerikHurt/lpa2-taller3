@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 def marcar_favorito(session: Session, id_usuario: int, id_cancion: int) -> Favorito:
-    """Crea un favorito validando que existan usuario y canción y que no esté repetido."""
+    """Crea un favorito si existen usuario y canción y no está repetido."""
     if not session.get(Usuario, id_usuario):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Usuario no encontrado")
     if not session.get(Cancion, id_cancion):
