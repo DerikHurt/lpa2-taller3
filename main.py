@@ -1,3 +1,5 @@
+import platform
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,6 +12,7 @@ from musica_api.database import create_db_and_tables, engine
 from musica_api.routers import canciones, favoritos, usuarios
 
 settings = get_settings()
+INICIO = time.time()
 
 
 @asynccontextmanager
@@ -93,7 +96,9 @@ def health_check():
     return {
         "status": "healthy" if estado_db == "ok" else "degraded",
         "database": estado_db,
-        # TODO: Agregar información sobre el sistema (uptime, memoria, etc.)
+        "uptime_segundos": round(time.time() - INICIO, 2),
+        "python": platform.python_version(),
+        "sistema": platform.system(),
     }
 
 
