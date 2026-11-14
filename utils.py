@@ -27,15 +27,17 @@ def validar_correo(correo):
 def formatear_duracion(segundos):
     """
     Convierte una duración en segundos a formato mm:ss.
-    
+
     Args:
         segundos (int): Duración en segundos
-        
+
     Returns:
         str: Duración formateada como mm:ss
     """
-    # TODO: pendiente de implementar
-    pass
+    if segundos is None or segundos < 0:
+        raise ValueError("La duración debe ser un número no negativo")
+    minutos, segs = divmod(int(segundos), 60)
+    return f"{minutos:02d}:{segs:02d}"
 
 
 def generar_slug(texto):
