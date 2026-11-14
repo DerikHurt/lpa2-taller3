@@ -9,8 +9,8 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from main import app
-from app.database import get_session
-from app.models import Usuario, Cancion, Favorito
+from musica_api.database import get_session
+from musica_api.models import Usuario, Cancion, Favorito
 
 
 # =============================================================================
@@ -55,7 +55,7 @@ def usuario_test_fixture(session: Session):
 
 
 # TODO: Fixture para crear canciones de prueba
-@pytest.fixture(name="musica_test")
+@pytest.fixture(name="cancion_test")
 def cancion_test_fixture(session: Session):
     """
     Crea una cancion de prueba en la base de datos.
