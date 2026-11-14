@@ -4,6 +4,7 @@ Contiene funciones auxiliares utilizadas en diferentes partes de la aplicación.
 """
 
 import re
+import unicodedata
 from datetime import datetime
 
 PATRON_CORREO = re.compile(r"^[\w.+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$")
@@ -44,25 +45,28 @@ def generar_slug(texto):
     """
     Genera un slug a partir de un texto.
     Un slug es una versión de texto amigable para URLs.
-    
+
     Args:
         texto (str): Texto a convertir en slug
-        
+
     Returns:
         str: Slug generado
     """
-    # TODO: Convertir a minúsculas
-    slug = texto
-    
-    # TODO: Reemplazar espacios con guiones
-    
-    # TODO: Eliminar caracteres no alfanuméricos (excepto guiones)
-    
-    # TODO: Reemplazar múltiples guiones con uno solo
-    
-    # TODO: Eliminar guiones al inicio y final
-    
-    return slug
+    # Convertir a minúsculas y quitar tildes (canción -> cancion)
+    slug = unicodedata.normalize("NFKD", texto.lower())
+    slug = slug.encode("ascii", "ignore").decode("ascii")
+
+    # Reemplazar espacios con guiones
+    slug = re.sub(r"\s+", "-", slug)
+
+    # Eliminar caracteres no alfanuméricos (excepto guiones)
+    slug = re.sub(r"[^a-z0-9-]", "", slug)
+
+    # Reemplazar múltiples guiones con uno solo
+    slug = re.sub(r"-{2,}", "-", slug)
+
+    # Eliminar guiones al inicio y final
+    return slug.strip("-")
 
 
 def obtener_año_actual():
