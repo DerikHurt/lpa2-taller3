@@ -2,3 +2,4 @@
 # Permite que los tests importen main.py, utils.py y musica_api desde la raíz
 pythonpath = ["."]
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
