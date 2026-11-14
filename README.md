@@ -171,3 +171,23 @@ lpa2-taller3
 
   En desarrollo el nivel por defecto es `DEBUG`; en producción se escribe además en `logs/musica_api.log`.
 - Para evitar líneas duplicadas con el log de acceso de uvicorn: `uvicorn main:app --reload --no-access-log`
+
+### Paginación
+
+- Todos los listados (`/api/usuarios`, `/api/canciones`, `/api/canciones/buscar`, `/api/favoritos` y `/api/usuarios/{id}/favoritos`) aceptan `offset` (por defecto `0`) y `limit` (por defecto `20`, máximo `100`).
+- La respuesta incluye el total de resultados, para que el frontend calcule el número de páginas (`ceil(total / limit)`):
+
+  ```json
+  GET /api/canciones/buscar?genero=rock&offset=20&limit=10
+
+  {
+    "items": [ { "id": 21, "titulo": "...", ... } ],
+    "total": 57,
+    "offset": 20,
+    "limit": 10
+  }
+  ```
+
+- En búsquedas, `total` cuenta solo los resultados filtrados.
+- Los resultados se ordenan por `id`, de modo que las páginas no repiten ni saltan elementos. Los favoritos de un usuario se devuelven del más reciente al más antiguo.
+- Implementación reutilizable en `musica_api/paginacion.py` (`Pagina[T]`, dependencia `parametros_paginacion` y función `paginar`).
