@@ -3,7 +3,10 @@ Configuración de la aplicación.
 Maneja diferentes entornos: desarrollo, pruebas y producción.
 """
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+NIVELES_LOG = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 
 
 class Settings(BaseSettings):
@@ -39,8 +42,18 @@ class Settings(BaseSettings):
     # algorithm: str = "HS256"
     # access_token_expire_minutes: int = 30
 
-    # TODO: Configuración de logging
-    # log_level: str = "INFO"
+    # Configuración de logging
+    log_level: str = "INFO"
+    # Ruta del archivo de log (rotativo). None = solo consola
+    log_file: str | None = None
+
+    @field_validator("log_level")
+    @classmethod
+    def validar_log_level(cls, v: str) -> str:
+        v = v.upper()
+        if v not in NIVELES_LOG:
+            raise ValueError(f"log_level debe ser uno de {sorted(NIVELES_LOG)}")
+        return v
 
     # Configuración de Pydantic Settings (estilo Pydantic v2)
     model_config = SettingsConfigDict(
@@ -66,6 +79,7 @@ class DevelopmentSettings(Settings):
     """Configuración para el entorno de desarrollo."""
 
     debug: bool = True
+    log_level: str = "DEBUG"
     # TODO: Agregar configuraciones específicas de desarrollo
 
 
@@ -81,6 +95,7 @@ class ProductionSettings(Settings):
     """Configuración para el entorno de producción."""
 
     debug: bool = False
+    log_file: str | None = "logs/musica_api.log"
     # TODO: Agregar configuraciones específicas de producción
     # TODO: Cambiar a una base de datos más robusta (PostgreSQL, MySQL)
     # database_url: str = "postgresql://user:password@localhost/musica_prod"
