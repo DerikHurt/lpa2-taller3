@@ -152,3 +152,22 @@ lpa2-taller3
 7. **Estadísticas de uso**: Implementar un sistema de seguimiento para analizar qué canciones son más populares y sugerir recomendaciones basadas en preferencias similares.
 
 8. **Subida de archivos**: Permitir la subida de archivos de audio y gestionar su almacenamiento en un servicio como S3 o similar.
+
+## Mejoras Implementadas
+
+### Registro (logging)
+
+- Todos los logs usan el formato `fecha | nivel | logger | mensaje` y cuelgan del logger `musica_api` (`musica_api/logging_config.py`).
+- **Middleware de requests** (`musica_api/middleware.py`): registra método, ruta, código de estado y duración de cada petición. Los errores 4xx/5xx se registran como `WARNING`/`ERROR`.
+- **Id de seguimiento**: cada respuesta incluye la cabecera `X-Request-ID` (o reutiliza la que envíe el cliente), y ese id aparece en el log. Así un error visto en el frontend se puede encontrar en los logs.
+- **Manejadores de errores** (`musica_api/errores.py`): registran los 404, 400 y errores de validación sin cambiar el formato `{"detail": ...}`. Una excepción no controlada se registra con su traceback y el cliente recibe un 500 genérico con el `request_id`, sin detalles internos.
+- Los routers registran las altas, cambios y bajas usando solo ids, sin correos ni nombres.
+- Configurable por variables de entorno en `.env`:
+
+  ```bash
+  LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  LOG_FILE=logs/musica_api.log  # opcional: archivo rotativo (1 MB x 5)
+  ```
+
+  En desarrollo el nivel por defecto es `DEBUG`; en producción se escribe además en `logs/musica_api.log`.
+- Para evitar líneas duplicadas con el log de acceso de uvicorn: `uvicorn main:app --reload --no-access-log`
