@@ -1,5 +1,7 @@
 """Endpoints de favoritos: /api/favoritos"""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 
@@ -7,6 +9,7 @@ from musica_api.database import get_session
 from musica_api.models import Cancion, Favorito, FavoritoCreate, FavoritoRead, Usuario
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def marcar_favorito(session: Session, id_usuario: int, id_cancion: int) -> Favorito:
@@ -30,6 +33,12 @@ def marcar_favorito(session: Session, id_usuario: int, id_cancion: int) -> Favor
     session.add(favorito)
     session.commit()
     session.refresh(favorito)
+    logger.info(
+        "Favorito %s creado (usuario=%s, cancion=%s)",
+        favorito.id,
+        id_usuario,
+        id_cancion,
+    )
     return favorito
 
 
@@ -62,3 +71,4 @@ def eliminar_favorito(id: int, session: Session = Depends(get_session)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Favorito no encontrado")
     session.delete(favorito)
     session.commit()
+    logger.info("Favorito %s eliminado", id)

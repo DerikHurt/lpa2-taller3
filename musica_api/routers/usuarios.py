@@ -1,5 +1,7 @@
 """Endpoints de usuarios: /api/usuarios"""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 
@@ -16,6 +18,7 @@ from musica_api.models import (
 from musica_api.routers.favoritos import marcar_favorito
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _obtener_o_404(session: Session, id: int) -> Usuario:
@@ -51,6 +54,7 @@ def crear_usuario(datos: UsuarioCreate, session: Session = Depends(get_session))
     session.add(usuario)
     session.commit()
     session.refresh(usuario)
+    logger.info("Usuario %s creado", usuario.id)
     return usuario
 
 
@@ -71,6 +75,7 @@ def actualizar_usuario(
     session.add(usuario)
     session.commit()
     session.refresh(usuario)
+    logger.info("Usuario %s actualizado (campos: %s)", id, ", ".join(cambios))
     return usuario
 
 
@@ -79,6 +84,7 @@ def eliminar_usuario(id: int, session: Session = Depends(get_session)):
     usuario = _obtener_o_404(session, id)
     session.delete(usuario)  # sus favoritos se eliminan en cascada
     session.commit()
+    logger.info("Usuario %s eliminado", id)
 
 
 # -----------------------------------------------------------------------------
@@ -116,5 +122,12 @@ def eliminar_favorito_usuario(
     ).first()
     if not favorito:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Favorito no encontrado")
+    id_favorito = favorito.id
     session.delete(favorito)
     session.commit()
+    logger.info(
+        "Favorito %s eliminado (usuario=%s, cancion=%s)",
+        id_favorito,
+        id_usuario,
+        id_cancion,
+    )

@@ -1,5 +1,7 @@
 """Endpoints de canciones: /api/canciones"""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, select
 
@@ -7,6 +9,7 @@ from musica_api.database import get_session
 from musica_api.models import Cancion, CancionCreate, CancionRead, CancionUpdate
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _obtener_o_404(session: Session, id: int) -> Cancion:
@@ -31,6 +34,7 @@ def crear_cancion(datos: CancionCreate, session: Session = Depends(get_session))
     session.add(cancion)
     session.commit()
     session.refresh(cancion)
+    logger.info("Canción %s creada", cancion.id)
     return cancion
 
 
@@ -64,10 +68,12 @@ def actualizar_cancion(
     id: int, datos: CancionUpdate, session: Session = Depends(get_session)
 ):
     cancion = _obtener_o_404(session, id)
-    cancion.sqlmodel_update(datos.model_dump(exclude_unset=True))
+    cambios = datos.model_dump(exclude_unset=True)
+    cancion.sqlmodel_update(cambios)
     session.add(cancion)
     session.commit()
     session.refresh(cancion)
+    logger.info("Canción %s actualizada (campos: %s)", id, ", ".join(cambios))
     return cancion
 
 
@@ -76,3 +82,4 @@ def eliminar_cancion(id: int, session: Session = Depends(get_session)):
     cancion = _obtener_o_404(session, id)
     session.delete(cancion)  # sus favoritos se eliminan en cascada
     session.commit()
+    logger.info("Canción %s eliminada", id)
