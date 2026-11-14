@@ -22,6 +22,7 @@ El proyecto incluye una interfaz de documentación interactiva generada automát
 lpa2-taller3
 ├──  README.md            # Este archivo, documentación completa del proyecto
 ├──  .env                 # Variables de entorno (desarrollo, pruebas, producción)
+├──  .env.example                # Plantilla de variables de entorno (copiar como .env)
 ├──  .gitignore           # Archivos y directorios a ignorar por Git
 ├──  main.py              # Script principal para ejecutar la aplicación
 ├──  musica.db            # Base de Datos
@@ -58,12 +59,18 @@ lpa2-taller3
    - id_cancion: ID de la canción (clave foránea)
    - fecha_marcado: Fecha en que se marcó como favorito
 
+## Requisitos
+
+- [Python 3.12](https://www.python.org/downloads/) (es la versión con la que se prueba en el CI)
+- [Git](https://git-scm.com/downloads)
+- Opcional: [DBeaver](https://dbeaver.io/) para ver o editar `musica.db`
+
 ## Instalación
 
 1. Clona este repositorio:
 
    ```bash
-   git clone https://github.com/UR-CC/lpa2-taller3.git
+   git clone https://github.com/DerikHurt/lpa2-taller3.git
    cd lpa2-taller3
    ```
 
@@ -71,29 +78,67 @@ lpa2-taller3
 
    ```bash
    python -m venv venv
+
+   # Windows (PowerShell)
+   venv\Scripts\activate
+
+   # Linux / macOS / Git Bash
    source venv/bin/activate
    ```
 
-3. Instala las dependencias:
+   En PowerShell, si aparece un error de "ejecución de scripts deshabilitada", ejecuta una vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+3. Instala las dependencias (API, pruebas, ruff y pre-commit):
 
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Ajusta las variables de entorno, editando el archivo `.env`
+4. (Opcional) Configura las variables de entorno. Sin `.env` la API funciona con los valores por defecto; para cambiarlos:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   y descomenta en `.env` lo que necesites (`DATABASE_URL`, `CORS_ORIGINS`, `LOG_LEVEL`, `LOG_FILE`, `ENVIRONMENT`).
 
 ## Ejecución
 
-1. Ejecuta la aplicación:
+1. Con el entorno virtual activado, ejecuta la aplicación:
 
    ```bash
-   uvicorn main:app --reload
+   uvicorn main:app --reload --no-access-log
    ```
+
+   `--no-access-log` evita que uvicorn repita cada petición, porque la API ya las registra con su propio formato. Al arrancar se crean las tablas si no existen; `musica.db` ya incluye 5 usuarios y 10 canciones de ejemplo.
 
 2. Accede a la aplicación:
    - API: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
    - Documentación *Swagger UI*: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
    - Documentación *ReDoc*: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+   - Estado de la API: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+
+3. Para detenerla, pulsa `Ctrl + C` en la terminal.
+
+## Pruebas y calidad de código
+
+Con el entorno virtual activado:
+
+```bash
+python -m pytest                 # todas las pruebas
+python -m pytest -k favorito     # solo las que contienen "favorito" en el nombre
+ruff check --fix .               # linter
+ruff format .                    # formatter
+```
+
+Para que ruff y pytest se ejecuten antes de cada commit, instala los hooks una vez:
+
+```bash
+pre-commit install
+pre-commit run --all-files       # revisar todo el repositorio
+```
+
+El hook de pytest usa el `python` activo, así que haz los commits con el entorno virtual activado. GitHub Actions ejecuta ruff y pytest en cada push a `main` y en cada pull request.
 
 ## Uso de la API
 
