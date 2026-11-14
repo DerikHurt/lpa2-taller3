@@ -2,22 +2,27 @@
 Módulo de utilidades para la aplicación.
 Contiene funciones auxiliares utilizadas en diferentes partes de la aplicación.
 """
+
 import re
 from datetime import datetime
+
+PATRON_CORREO = re.compile(r"^[\w.+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$")
+
 
 def validar_correo(correo):
     """
     Valida que un correo electrónico tenga un formato válido.
-    
+
     Args:
         correo (str): Correo electrónico a validar
-        
+
     Returns:
         bool: True si el correo es válido, False en caso contrario
     """
-    # TODO: crear la expresión regular para validar el correo
-    patron = ""
-    return bool(re.match(patron, correo))
+    if not isinstance(correo, str):
+        return False
+    return bool(PATRON_CORREO.fullmatch(correo))
+
 
 def formatear_duracion(segundos):
     """
@@ -30,7 +35,8 @@ def formatear_duracion(segundos):
         str: Duración formateada como mm:ss
     """
     # TODO: pendiente de implementar
-    pass 
+    pass
+
 
 def generar_slug(texto):
     """
@@ -56,6 +62,7 @@ def generar_slug(texto):
     
     return slug
 
+
 def obtener_año_actual():
     """
     Obtiene el año actual.
@@ -65,6 +72,7 @@ def obtener_año_actual():
     """
     # TODO: pendiente por implementar
     return ""
+
 
 def validar_año(año):
     """
@@ -78,4 +86,3 @@ def validar_año(año):
     """
     año_actual = obtener_año_actual()
     return 1900 <= año <= año_actual
-
