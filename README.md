@@ -1,5 +1,10 @@
 # API de Música
 
+## Estudiante
+
+- **Nombre:** Derik Jair Hurtado Sinisterra
+- **GitHub:** [DerikHurt](https://github.com/DerikHurt)
+
 Una [API RESTful](https://aws.amazon.com/es/what-is/restful-api/) para gestionar usuarios, canciones y favoritos. Desarrollada con [FastAPI](https://fastapi.tiangolo.com/), [SQLModel](https://sqlmodel.tiangolo.com/) y [Pydantic](https://docs.pydantic.dev/).
 
 ## Descripción
