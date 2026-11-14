@@ -72,21 +72,20 @@ def generar_slug(texto):
 def obtener_año_actual():
     """
     Obtiene el año actual.
-    
+
     Returns:
         int: Año actual
     """
-    # TODO: pendiente por implementar
-    return ""
+    return datetime.now().year
 
 
 def validar_año(año):
     """
     Valida que un año sea válido (no futuro y no muy antiguo).
-    
+
     Args:
         año (int): Año a validar
-        
+
     Returns:
         bool: True si el año es válido, False en caso contrario
     """
